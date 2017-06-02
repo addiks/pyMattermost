@@ -217,9 +217,12 @@ class ChannelModel:
         raise Exception("*UNIMPLEMENTED*")
         headers, result = self.callServer("GET", "/stats")
 
-    def addUserToChannel(self):
-        raise Exception("*UNIMPLEMENTED*")
-        headers, result = self.callServer("POST", "/add")
+    def addUser(self, userModel):
+        headers, result = self.callServer("POST", "/add", {
+            'user_id': userModel.getId()
+        })
+
+        print(result)
 
     def getChannelMember(self, userId):
         raise Exception("*UNIMPLEMENTED*")
