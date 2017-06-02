@@ -222,9 +222,15 @@ class ServerLoggedInModel:
         raise Exception("*UNIMPLEMENTED*")
         headers, result = self.callServer("GET", "/users/{offset}/%d" % limit)
 
-    def searchUsers(self):
-        raise Exception("*UNIMPLEMENTED*")
-        headers, result = self.callServer("POST", "/users/search")
+    def searchUsers(self, term):
+        headers, result = self.callServer("POST", "/users/search", {
+            'term': term
+        })
+
+        users = []
+        for userJsonData in result:
+            users.append(UserModel.fromJsonUserObject(userJsonData, self))
+        return users
 
     def getUsersByIds(self, userIds):
         users = []

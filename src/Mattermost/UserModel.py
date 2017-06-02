@@ -130,6 +130,9 @@ class UserModel:
 
         return serverModel.getUserImage(self.__userId, self.__lastPictureUpdate)
 
+    def getUserName(self):
+        return self.__username
+
     def getUseName(self):
         usename = "[unknown]"
 

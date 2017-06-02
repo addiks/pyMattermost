@@ -151,6 +151,12 @@ class ChannelModel:
     def getDirectMessageRemoteUser(self):
         remoteUserId = self.getDirectMessageRemoteUserId()
 
+        # TeamModel
+        teamModel = self.__teamModel
+
+        # ServerLoggedInModel
+        server = teamModel.getServer()
+
         # UserModel
         remoteUser = server.getUserById(remoteUserId)
 

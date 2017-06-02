@@ -1,5 +1,6 @@
 
 from .ChannelModel import ChannelModel
+from .ChannelMemberModel import ChannelMemberModel
 
 class TeamModel:
     __serverModel = None # ServerLoggedInModel
@@ -154,13 +155,15 @@ class TeamModel:
         return channels
 
     def getChannelMembers(self):
-        raise Exception("*UNIMPLEMENTED*")
         headers, result = self.callServer("GET", "/channels/members")
+
+        channelMembers = []
+        for channelMemberJsonData in result:
+            channelMembers.append(ChannelMemberModel.fromJsonChannelMemberObject(self, channelMemberJsonData))
+        return channelMembers
 
     def getChannel(self, channelId):
         headers, result = self.callServer("GET", "/channels/%s/" % channelId)
-
-        print(repr(result))
 
         # Mattermost.ChannelModel
         channel = None
