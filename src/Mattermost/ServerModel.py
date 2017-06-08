@@ -64,14 +64,14 @@ class ServerModel:
             self.ping()
         return self.__isReachable
 
-    def login(self, username, password):
+    def login(self, username, password, reconnectListener = None):
         loggedInModel = None
 
         if username in self.__loggedInModels:
             loggedInModel = self.__loggedInModels[username]
 
         else:
-            loggedInModel = ServerLoggedInModel(self, username, password)
+            loggedInModel = ServerLoggedInModel(self, username, password, reconnectListener)
             self.__loggedInModels[username] = loggedInModel
 
         return loggedInModel

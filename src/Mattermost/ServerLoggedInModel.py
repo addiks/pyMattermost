@@ -12,19 +12,20 @@ from .UserModel import UserModel
 from .FileModel import FileModel
 
 class ServerLoggedInModel:
-    __serverModel = None      # ServerModel
-    __selfUser = None         # UserModel
-    __webSocket = None        # websocket
-    __webSocketSeq = 0        # integer
-    __webSocketCallbacks = {} # callback[]
-    __eventListener = {}      # callback[]
+    __serverModel = None       # ServerModel
+    __selfUser = None          # UserModel
+    __webSocket = None         # websocket
+    __webSocketSeq = 0         # integer
+    __webSocketCallbacks = {}  # callback[]
+    __eventListener = {}       # callback[]
+    __reconnectListener = None # callback
     __userCache = {}
     __username = None
     __password = None
     __token = None
     __isStopping = False      # boolean
 
-    def __init__(self, serverModel, username, password):
+    def __init__(self, serverModel, username, password, reconnectListener):
         if not serverModel.isReachable():
             raise Exception("Mattermost-Server %s is not reachable!" % serverModel.getUrl())
 
@@ -43,6 +44,7 @@ class ServerLoggedInModel:
         self.__token = responseHeaders['token']
         self.__username = username
         self.__password = password
+        self.__reconnectListener = reconnectListener
 
         asyncio.get_event_loop().run_until_complete(self.__connectWebsocket())
 
@@ -70,8 +72,6 @@ class ServerLoggedInModel:
             portStr = ":" + str(port)
 
         url = webSocketScheme + '://' + hostname + portStr + path + "/api/v3/users/websocket"
-
-        print(url)
 
         webSocket = await websockets.connect(url)
         self.__webSocket = webSocket
@@ -116,8 +116,18 @@ class ServerLoggedInModel:
                                     GLib.idle_add(callback, eventData)
 
             except websockets.exceptions.ConnectionClosed as exception:
-                # TODO: automatic reconnect after X seconds or minutes and notification to user
-                raise exception
+                if self.__reconnectListener is None:
+                    raise exception
+
+                elif self.__reconnectListener(self, exception):
+                    asyncio.get_event_loop().run_until_complete(self.__connectWebsocket())
+
+                    self.sendWebsocketRequest("authentication_challenge", {
+                        'token': self.__token
+                    })
+
+                else:
+                    self.__isStopping = True
 
         webSocket.close()
 
@@ -351,6 +361,5 @@ class ServerLoggedInModel:
         return str(uuid.uuid4())
 
     def callServer(self, method, route, data=None, headers={}, version="v3", returnPlainResponse=False):
-        print("Token: " + str(self.__token))
         headers['Authorization'] = "Bearer " + self.__token
         return self.__serverModel.callServer(method, route, data, headers, version, returnPlainResponse)
