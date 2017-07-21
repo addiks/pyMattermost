@@ -125,9 +125,34 @@ class TeamModel:
         raise Exception("*UNIMPLEMENTED*")
         headers, result = self.callServer("POST", "/remove_user_from_team")
 
-    def createChannel(self):
-        raise Exception("*UNIMPLEMENTED*")
-        headers, result = self.callServer("POST", "/channels/create")
+    def createChannel(self, displayName, channelType = 'O', purpose="", header=""):
+
+        name = displayName
+
+        channelData = {
+            'name': name,
+            'display_name': displayName,
+            'type': channelType
+        }
+
+        if len(purpose) > 0:
+            channelData['purpose'] = purpose
+
+        if len(header) > 0:
+            channelData['header'] = header
+
+        headers, result = self.callServer("POST", "/channels/create", channelData)
+
+        if 'status' in headers and headers['status'] != '200':
+            if 'message' in result:
+                raise Exception(result['message'])
+
+            else:
+                raise Exception("unknown error while creating channel!")
+
+        channel = ChannelModel.fromJsonChannelObject(self, result)
+
+        return channel
 
     def updateChannel(self):
         raise Exception("*UNIMPLEMENTED*")
@@ -145,13 +170,14 @@ class TeamModel:
         return channelModels
 
     def searchMoreChannels(self, term):
-        headers, result = self.callServer("POST", "/channels/more/search", {
-            'term': term
-        })
-
         channels = []
-        for channelJsonData in result:
-            channels.append(ChannelModel.fromJsonChannelObject(self, channelJsonData))
+        if len(term) > 0:
+            headers, result = self.callServer("POST", "/channels/more/search", {
+                'term': term
+            })
+            print(result)
+            for channelJsonData in result:
+                channels.append(ChannelModel.fromJsonChannelObject(self, channelJsonData))
         return channels
 
     def getChannelMembers(self):

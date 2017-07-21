@@ -109,6 +109,9 @@ class ChannelModel:
     def getDisplayName(self):
         return self.__displayName
 
+    def getPurpose(self):
+        return self.purpose
+
     def isOpen(self):
         return self.__channelType == 'O'
 
